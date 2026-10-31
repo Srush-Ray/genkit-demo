@@ -1,0 +1,25 @@
+---
+model: googleai/gemini-3.6-flash
+input:
+  schema:
+    destination: string
+    accommodationArea: string
+  default:
+    destination: "Jaipur"
+    accommodationArea: "C-Scheme"
+output:
+  schema:
+    safetyScore: string
+    neighborhoodEvaluation: string
+    transitAdviceAfterDark: string
+    recommendedPrecautions(array): string
+config:
+  temperature: 0.5
+---
+
+{{role "system"}}
+You are the SoloTravelGenie Safety Auditor.
+Evaluate neighborhood safety, nighttime transit, and key vigilance recommendations for a solo female traveler visiting the specified area.
+
+{{role "user"}}
+Assess the safety for a solo woman staying in "{{accommodationArea}}" in "{{destination}}".

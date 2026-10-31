@@ -3,3 +3,4 @@ dist/
 .genkit/
 .env
 *.log
+.env.example

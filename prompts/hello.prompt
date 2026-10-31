@@ -1,0 +1,11 @@
+---
+model: googleai/gemini-3.6-flash
+input:
+  schema:
+    language?: string
+  default:
+    language: marathi
+---
+
+A greating in {{language}}.
+Nothing else.

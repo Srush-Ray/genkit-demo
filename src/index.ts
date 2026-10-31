@@ -1,5 +1,5 @@
 import { genkit } from 'genkit';
-import { googleAI, gemini20Flash } from '@genkit-ai/googleai';
+import { googleAI } from '@genkit-ai/google-genai';
 import * as dotenv from 'dotenv';
 import {
   TravelPlanInputSchema,
@@ -20,8 +20,21 @@ const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENAI_API_KEY;
  */
 export const ai = genkit({
   plugins: apiKey ? [googleAI({ apiKey })] : [],
-  ...(apiKey ? { model: gemini20Flash } : {}),
+  ...(apiKey ? { model: 'googleai/gemini-3.6-flash' } : {}),
 });
+
+/**
+ * Register schemas in Genkit registry so Dotprompt (.prompt files) can resolve them by name
+ */
+export const RegisteredTravelPlanInputSchema = ai.defineSchema(
+  'TravelPlanInputSchema',
+  TravelPlanInputSchema
+);
+
+export const RegisteredTravelPlanOutputSchema = ai.defineSchema(
+  'TravelPlanOutputSchema',
+  TravelPlanOutputSchema
+);
 
 /**
  * Register the local/simulated Genkit Tools
@@ -199,8 +212,8 @@ async function generateLocalFallbackPlan(
     overallSafetyAssessment: `High to Moderate. ${destination} is widely frequented by solo domestic and international travelers, with vibrant public areas, good phone connectivity, and active police assistance.`,
     safeNeighborhoods: [
       destLower.includes('goa') ? 'Fontainhas (Panaji), Anjuna, Mandrem, and Benaulim' :
-      destLower.includes('jaipur') ? 'C-Scheme, Civil Lines, Malviya Nagar, and Bani Park' :
-      'Downtown Tourist District, Central Mall Road, and Heritage Precinct',
+        destLower.includes('jaipur') ? 'C-Scheme, Civil Lines, Malviya Nagar, and Bani Park' :
+          'Downtown Tourist District, Central Mall Road, and Heritage Precinct',
       'Well-lit pedestrian zones with regular evening cafe footfall',
     ],
     precautionsAndAreasToAvoid: [
@@ -245,9 +258,36 @@ async function generateLocalFallbackPlan(
 }
 
 /**
+ * Genkit Prompt: travelPlanPrompt
+ *
+ * Defines the core prompt template, input/output schemas, and tool bindings
+ * using Genkit's prompt definition API. Accessible directly in code and the Dev UI.
+ */
+export const travelPlanPrompt = ai.definePrompt({
+  name: 'travelPlanPrompt',
+  input: { schema: TravelPlanInputSchema },
+  output: { schema: TravelPlanOutputSchema },
+  tools: [fetchDestinationWeather, fetchLocalNews],
+  prompt: `You are "SoloTravelGenie", a premier solo female travel specialist and itinerary architect.
+You specialize in designing safe, culturally respectful, deeply rewarding solo journeys departing specifically from Pune, Maharashtra, India.
+
+CRITICAL OPERATIONAL RULES:
+1. ORCHESTRATE TOOLS:
+   - Call 'fetchDestinationWeather' for destination="{{destination}}" to ground accurate weather conditions, temperature range, and packing advice.
+   - Call 'fetchLocalNews' for destination="{{destination}}" to ground recent headlines, local events/festivals, and active travel advisories.
+2. PUNE TRANSIT: Provide practical, concrete transport options departing from Pune (e.g. flights from Pune Airport PNQ, trains from Pune Junction PUNE with train names/numbers, or highway routes like NH48 / Volvo buses).
+3. SOLO FEMALE SAFETY: Provide extensive, empowering, and realistic safety guidance for a woman traveling solo. Mention recommended safe neighborhoods, areas to avoid after dark, local cultural/dress expectations, and emergency numbers (112, 1091).
+4. LOCAL GASTRONOMY: Detail must-try regional dishes (both vegetarian and non-vegetarian options) with specific recommended eateries/cafes.
+5. RECOMMENDED STAYS: Curate budget-friendly to mid-range stays (such as reputed hostels like Zostel with female dorms or boutique hotels) featuring strong security (24/7 reception, keycards).
+6. OUTPUT CONFORMANCE: Return strict structured JSON conforming precisely to the output schema.
+
+Create a comprehensive solo female travel plan from Pune, Maharashtra to {{destination}} for the travel window: {{travelDates}}.`,
+});
+
+/**
  * Genkit Flow: travelPlanFlow
  *
- * Orchestrates tools fetchDestinationWeather and fetchLocalNews,
+ * Orchestrates tools fetchDestinationWeather and fetchLocalNews via travelPlanPrompt,
  * integrates transit options from Pune, Maharashtra,
  * recommends local gastronomy and vetted stays,
  * and compiles comprehensive solo female travel safety advice.
@@ -263,39 +303,16 @@ export const travelPlanFlow = ai.defineFlow(
       process.env.GEMINI_API_KEY || process.env.GOOGLE_GENAI_API_KEY
     );
 
-    // If an API key is provided, use Gemini 2.0 Flash model with tool orchestration
+    // If an API key is provided, execute the Genkit prompt with live Gemini 2.0 Flash and tool orchestration
     if (hasApiKey) {
       try {
-        const systemPrompt = `You are "SoloTravelGenie", a premier solo female travel specialist and itinerary architect.
-You specialize in designing safe, culturally respectful, deeply rewarding solo journeys departing specifically from Pune, Maharashtra, India.
-
-CRITICAL OPERATIONAL RULES:
-1. ORCHESTRATE TOOLS: You MUST invoke the provided tools:
-   - 'fetchDestinationWeather' with destination="${destination}" to ground weather, temperature, and packing advice.
-   - 'fetchLocalNews' with destination="${destination}" to ground recent headlines, local events, and active travel advisories.
-2. PUNE TRANSIT: Provide practical, concrete transport options departing from Pune (e.g. Pune Airport PNQ flights, Pune Jn PUNE trains with train names/numbers, or highway routes like Mumbai-Pune Expressway / NH48 / Volvo buses).
-3. SOLO FEMALE SAFETY: Provide extensive, empowering, and realistic safety guidance for a woman traveling solo. Mention recommended safe neighborhoods, areas to avoid after dark, local cultural/dress expectations, and emergency numbers (112, 1091).
-4. LOCAL GASTRONOMY: Detail must-try regional dishes (both vegetarian and non-vegetarian options) with specific recommended eateries/cafes.
-5. RECOMMENDED STAYS: Curate budget-friendly to mid-range stays (such as reputed hostels like Zostel with female dorms or boutique hotels) featuring strong security (24/7 reception, keycards).
-6. OUTPUT CONFORMANCE: Return strict structured JSON conforming precisely to the output schema.`;
-
-        const userPrompt = `Create a comprehensive solo female travel plan from Pune, Maharashtra to ${destination} for the travel window: ${travelDates}.`;
-
-        const response = await ai.generate({
-          system: systemPrompt,
-          prompt: userPrompt,
-          tools: [fetchDestinationWeather, fetchLocalNews],
-          output: {
-            schema: TravelPlanOutputSchema,
-          },
-        });
-
+        const response = await travelPlanPrompt({ destination, travelDates });
         if (response.output) {
           return response.output;
         }
       } catch (err) {
         console.warn(
-          'Warning: Gemini generation encountered an error, falling back to local simulated tool engine:',
+          'Warning: Gemini prompt execution encountered an error, falling back to local simulated tool engine:',
           err
         );
       }
@@ -310,5 +327,5 @@ CRITICAL OPERATIONAL RULES:
   }
 );
 
-// Export all flows, tools, and types
+// Export all flows, tools, prompts, and types
 export default ai;

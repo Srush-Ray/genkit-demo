@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SoloTravelGenie 🧞 | Solo Female Travel Planner from Pune</title>
+  <meta name="description" content="AI-powered solo female travel planner crafted specifically for journeys departing from Pune, Maharashtra. Built with Firebase Genkit and Gemini." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Ambient background glow elements -->
+  <div class="glow-orb orb-1"></div>
+  <div class="glow-orb orb-2"></div>
+  <div class="glow-orb orb-3"></div>
+
+  <!-- Navigation bar -->
+  <header class="navbar">
+    <div class="brand-container">
+      <div class="brand-icon">🧞</div>
+      <div class="brand-text">
+        <div class="brand-title">SoloTravelGenie</div>
+        <div class="brand-subtitle">Solo Female Itinerary Architect • Departing from Pune 📍</div>
+      </div>
+    </div>
+    <div class="nav-actions">
+      <div class="engine-badge" id="engineBadge">
+        <span class="status-dot"></span>
+        <span id="engineStatusText">Connecting...</span>
+      </div>
+      <a href="http://localhost:4000" target="_blank" class="nav-btn ghost-btn" title="Inspect traces and flows in Genkit Developer UI">
+        <span class="icon">⚡</span> Genkit Dev UI
+      </a>
+    </div>
+  </header>
+
+  <!-- Main container -->
+  <main class="main-content">
+    <!-- Hero / Input card -->
+    <section class="glass-card hero-card">
+      <div class="hero-header">
+        <div class="origin-tag">
+          <span class="pin-icon">📍</span> Origin: <strong>Pune, Maharashtra (PNQ / Pune Jn)</strong>
+        </div>
+        <h1 class="hero-title">Where would you like to travel next?</h1>
+        <p class="hero-desc">
+          Empowering solo female travelers with safe transit routes from Pune, vetted accommodations, authentic regional flavors, and real-time destination insights powered by Firebase Genkit.
+        </p>
+      </div>
+
+      <!-- Planner Form -->
+      <form id="plannerForm" class="planner-form">
+        <div class="form-grid">
+          <div class="input-group">
+            <label for="destinationInput">Destination City / Region</label>
+            <div class="input-wrapper">
+              <span class="input-icon">🏖️</span>
+              <input 
+                type="text" 
+                id="destinationInput" 
+                placeholder="e.g. Goa, Jaipur, Udaipur, Pondicherry, Manali..." 
+                required 
+                autocomplete="off"
+              />
+            </div>
+          </div>
+          <div class="input-group">
+            <label for="datesInput">Travel Dates / Duration</label>
+            <div class="input-wrapper">
+              <span class="input-icon">🗓️</span>
+              <input 
+                type="text" 
+                id="datesInput" 
+                placeholder="e.g. Nov 15 - Nov 20, 4 days in December..." 
+                required 
+                autocomplete="off"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Inspiration Pills -->
+        <div class="quick-picks">
+          <span class="picks-label">✨ Quick Inspiration:</span>
+          <div class="picks-list" id="quickPicksList">
+            <!-- Dynamically populated from /api/sample-destinations -->
+          </div>
+        </div>
+
+        <button type="submit" id="submitBtn" class="generate-btn">
+          <span class="btn-sparkle">✨</span>
+          <span class="btn-text">Craft My Solo Travel Plan</span>
+          <span class="btn-arrow">→</span>
+        </button>
+      </form>
+    </section>
+
+    <!-- Loading Skeleton with multi-step progress -->
+    <section id="loadingSection" class="glass-card loading-card hidden">
+      <div class="spinner-container">
+        <div class="genie-loader">
+          <div class="loader-ring ring-1"></div>
+          <div class="loader-ring ring-2"></div>
+          <div class="loader-icon">🧞</div>
+        </div>
+      </div>
+      <h3 class="loading-title">SoloTravelGenie is orchestrating your plan...</h3>
+      <p class="loading-subtitle">Calling Genkit function tools and synthesizing Pune transit logistics</p>
+
+      <div class="steps-progress">
+        <div class="step-item step-active" id="step1">
+          <span class="step-icon">☀️</span>
+          <span class="step-label">Querying <code>fetchDestinationWeather</code> tool</span>
+        </div>
+        <div class="step-item" id="step2">
+          <span class="step-icon">📰</span>
+          <span class="step-label">Querying <code>fetchLocalNews</code> & advisories</span>
+        </div>
+        <div class="step-item" id="step3">
+          <span class="step-icon">🚆</span>
+          <span class="step-label">Mapping PNQ flights & Pune Jn train options</span>
+        </div>
+        <div class="step-item" id="step4">
+          <span class="step-icon">🛡️</span>
+          <span class="step-label">Synthesizing solo female safety & vetted stays</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Error state -->
+    <div id="errorBanner" class="glass-card error-card hidden">
+      <div class="error-icon">⚠️</div>
+      <div class="error-content">
+        <div class="error-title">Generation Notice</div>
+        <div class="error-msg" id="errorMessage">Unable to fetch travel plan. Please check backend connection.</div>
+      </div>
+      <button class="dismiss-btn" id="dismissError">✕</button>
+    </div>
+
+    <!-- Results Section -->
+    <section id="resultsSection" class="results-container hidden">
+      <!-- Plan summary banner -->
+      <div class="glass-card summary-banner">
+        <div class="summary-top">
+          <div class="summary-meta">
+            <span class="meta-tag">✈️ Solo Plan</span>
+            <span class="meta-date" id="resultTravelDates">Nov 15 - Nov 20</span>
+          </div>
+          <div class="summary-actions">
+            <button class="action-btn" id="copyJsonBtn" title="Copy Raw Plan JSON">
+              <span class="icon">📋</span> Copy JSON
+            </button>
+            <button class="action-btn" id="printBtn" title="Print / Save Itinerary">
+              <span class="icon">🖨️</span> Print / PDF
+            </button>
+          </div>
+        </div>
+        <h2 class="summary-dest" id="resultDestination">Trip to Destination</h2>
+        <p class="summary-text" id="resultTripSummary"></p>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="tabs-nav">
+        <button class="tab-btn active" data-tab="safetyTab">
+          <span class="tab-icon">🛡️</span> Solo Woman Safety
+        </button>
+        <button class="tab-btn" data-tab="transitTab">
+          <span class="tab-icon">🚆</span> Pune Transit
+        </button>
+        <button class="tab-btn" data-tab="weatherNewsTab">
+          <span class="tab-icon">🌤️</span> Weather & News
+        </button>
+        <button class="tab-btn" data-tab="foodStaysTab">
+          <span class="tab-icon">🍛</span> Food & Stays
+        </button>
+      </div>
+
+      <!-- Tab 1: Safety Hub -->
+      <div class="tab-content active" id="safetyTab">
+        <div class="safety-grid">
+          <!-- Overall rating & Helplines -->
+          <div class="glass-card safety-highlight-card">
+            <div class="card-header">
+              <span class="card-icon">🚨</span>
+              <h3>Emergency Helplines (India)</h3>
+            </div>
+            <div class="helplines-list">
+              <div class="helpline-item">
+                <div class="helpline-badge">Women Helpline</div>
+                <div class="helpline-number" id="hlWomen">1091 / 112</div>
+              </div>
+              <div class="helpline-item">
+                <div class="helpline-badge">Police Control</div>
+                <div class="helpline-number" id="hlPolice">100 / 112</div>
+              </div>
+              <div class="helpline-item">
+                <div class="helpline-badge">Tourist Helpline</div>
+                <div class="helpline-number" id="hlTourist">1363 (24x7)</div>
+              </div>
+            </div>
+            <div class="safety-score-box">
+              <div class="score-label">Overall Safety Assessment</div>
+              <div class="score-desc" id="safetyAssessment">High to Moderate with standard solo female vigilance.</div>
+            </div>
+          </div>
+
+          <!-- Safe Neighborhoods & Caution Zones -->
+          <div class="glass-card">
+            <div class="card-header">
+              <span class="card-icon">📍</span>
+              <h3>Safe Zones & Nighttime Caution</h3>
+            </div>
+            <div class="neighborhood-section">
+              <div class="sub-label">Recommended Safe Neighborhoods to Stay / Explore:</div>
+              <ul class="tag-list" id="safeNeighborhoodsList"></ul>
+            </div>
+            <div class="caution-section">
+              <div class="sub-label">Precautions & Areas to Avoid After Dark:</div>
+              <ul class="caution-list" id="precautionsList"></ul>
+            </div>
+          </div>
+
+          <!-- Cultural nuances & Practical solo tips -->
+          <div class="glass-card full-width">
+            <div class="card-header">
+              <span class="card-icon">💡</span>
+              <h3>Cultural Attire & Practical Solo Tips</h3>
+            </div>
+            <div class="attire-box">
+              <div class="attire-title">👗 Cultural Nuances & Dress Codes:</div>
+              <p id="culturalAttireText"></p>
+            </div>
+            <div class="practical-tips-box">
+              <div class="tips-title">🎒 Practical Ground Wisdom:</div>
+              <ul class="tips-list" id="practicalTipsList"></ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Pune Transit -->
+      <div class="tab-content" id="transitTab">
+        <div class="transit-intro">
+          <span class="badge-pill">📍 Origin: Pune, Maharashtra</span>
+          <p>Curated routes connecting directly from Pune Airport (PNQ), Pune Junction Railway Station (PUNE), or highway AC sleeper buses.</p>
+        </div>
+        <div class="transit-cards-grid" id="transitCardsContainer">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <!-- Tab 3: Weather & News Tools Grounding -->
+      <div class="tab-content" id="weatherNewsTab">
+        <div class="weather-news-grid">
+          <!-- Weather Card -->
+          <div class="glass-card weather-card">
+            <div class="tool-attribution">
+              <span class="tool-badge">Genkit Tool</span>
+              <code>fetchDestinationWeather</code>
+            </div>
+            <div class="card-header">
+              <span class="card-icon">☀️</span>
+              <h3>Destination Weather & Packing</h3>
+            </div>
+            <div class="weather-stat-row">
+              <div class="weather-stat">
+                <span class="stat-label">Expected Conditions</span>
+                <span class="stat-value" id="weatherConditions">Sunny & Pleasant</span>
+              </div>
+              <div class="weather-stat">
+                <span class="stat-label">Temperature Range</span>
+                <span class="stat-value temp-badge" id="weatherTemp">22°C - 31°C</span>
+              </div>
+            </div>
+            <p class="weather-overview" id="weatherOverview"></p>
+            <div class="packing-box">
+              <div class="packing-title">🎒 Packing Essentials Checklist:</div>
+              <ul class="checklist" id="packingList"></ul>
+            </div>
+          </div>
+
+          <!-- News & Advisory Card -->
+          <div class="glass-card news-card">
+            <div class="tool-attribution">
+              <span class="tool-badge">Genkit Tool</span>
+              <code>fetchLocalNews</code>
+            </div>
+            <div class="card-header">
+              <span class="card-icon">📰</span>
+              <h3>Local Headlines & Advisories</h3>
+            </div>
+            <div class="advisory-callout">
+              <span class="advisory-icon">📢</span>
+              <div class="advisory-text" id="newsAdvisory"></div>
+            </div>
+            <div class="headlines-box">
+              <div class="headlines-title">Recent Local News:</div>
+              <ul class="headlines-list" id="newsHeadlinesList"></ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 4: Food & Stays -->
+      <div class="tab-content" id="foodStaysTab">
+        <div class="food-stays-grid">
+          <!-- Local Food -->
+          <div class="glass-card">
+            <div class="card-header">
+              <span class="card-icon">🍛</span>
+              <h3>Must-Try Authentic Gastronomy</h3>
+            </div>
+            <p class="section-desc">Handpicked regional dishes, culinary notes, and verified authentic dining spots.</p>
+            <div class="food-list" id="foodItemsContainer"></div>
+          </div>
+
+          <!-- Stays -->
+          <div class="glass-card">
+            <div class="card-header">
+              <span class="card-icon">🏨</span>
+              <h3>Solo-Female Friendly Accommodations</h3>
+            </div>
+            <p class="section-desc">Budget-friendly to mid-range stays vetted for solo safety, female dorms, and keycard security.</p>
+            <div class="stays-list" id="staysContainer"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <div class="footer-content">
+      <span>Built with ❤️ for solo female travelers using <strong>Firebase Genkit</strong>, <strong>Gemini 2.0 Flash</strong> & <strong>TypeScript</strong>.</span>
+      <span class="footer-links">
+        <a href="https://genkit.dev" target="_blank">Genkit Docs</a> • 
+        <a href="http://localhost:4000" target="_blank">Dev UI (localhost:4000)</a>
+      </span>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

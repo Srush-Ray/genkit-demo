@@ -1,20 +1,28 @@
 # 🧞 SoloTravelGenie
 
-> A local, free-tier Firebase Genkit application in TypeScript designed to craft personalized, safety-conscious solo female travel plans departing from **Pune, Maharashtra**. Runs 100% locally on your machine with **no Firebase Blaze plan or cloud deployment required**.
+> A local, free-tier Firebase Genkit application in TypeScript with a **sleek glassmorphic web dashboard** and **Genkit Prompts**, designed to craft personalized, safety-conscious solo female travel plans departing from **Pune, Maharashtra**. Runs 100% locally on your machine with **no Firebase Blaze plan or cloud deployment required**.
 
 ---
 
 ## 🌟 Overview & Key Features
 
-**SoloTravelGenie** combines the power of **Firebase Genkit**, **Google Gemini (Gemini 2.0 Flash)**, and **TypeScript** with custom function calling tools:
+**SoloTravelGenie** combines the power of **Firebase Genkit**, **Google Gemini (Gemini 2.0 Flash)**, **Dotprompt**, and **TypeScript** with custom function calling tools:
 
-1. **Origin-Specific Transit from Pune:** Recommends exact Pune departures (direct flights from Pune Airport PNQ, trains from Pune Junction PUNE, Volvo sleeper buses, and scenic highway road trips).
-2. **Genkit Function Calling (Tools):**
-   - ☀️ `fetchDestinationWeather`: Obtains accurate weather conditions, temperature ranges, seasonal context, and packing advice for the target destination.
-   - 📰 `fetchLocalNews`: Obtains recent local headlines, active municipal travel advisories, and seasonal festivals.
-3. **Solo Female Traveler Safety Guide:** Comprehensive safety rating, safest neighborhoods to book stays, areas to exercise caution in after dark, respectful dress codes, practical transit precautions, and emergency helplines.
-4. **Authentic Gastronomy & Vetted Stays:** Must-try local delicacies with exact eateries, plus budget-friendly to mid-range stays highlighting safety features (female-only dorms, 24/7 reception, keycards).
-5. **Zero Cloud Lock-in / Free-Tier:** Runs locally with the interactive **Genkit Developer UI** (`http://localhost:4000`) and supports both live Gemini LLM reasoning and an offline simulated engine.
+1. **Glassmorphic Web Application (`localhost:3000`):**
+   - Sleek dark cosmic design with glassmorphic cards, ambient glows, dynamic tabbed panels, and responsive layout.
+   - Quick-inspiration pills for instant 1-click itinerary generation.
+   - Animated multi-step tool execution feedback.
+   - One-click **Copy JSON** and **Print/PDF Export** for travelers on the go.
+2. **Genkit Prompts (`.prompt` & Code Prompts):**
+   - [prompts/travelPlan.prompt](file:///Users/srushtiraybhoge/Srushti/Code/genkit/prompts/travelPlan.prompt): Dotprompt file with YAML frontmatter, input/output schemas, and tool bindings.
+   - [prompts/safetyAudit.prompt](file:///Users/srushtiraybhoge/Srushti/Code/genkit/prompts/safetyAudit.prompt): Targeted solo safety evaluation prompt.
+   - `travelPlanPrompt` defined via `ai.definePrompt` in [src/index.ts](file:///Users/srushtiraybhoge/Srushti/Code/genkit/src/index.ts) for programmatic execution.
+3. **Origin-Specific Transit from Pune:** Recommends exact Pune departures (direct flights from Pune Airport PNQ, trains from Pune Junction PUNE with train numbers, Volvo sleeper buses, and highway road trips).
+4. **Genkit Function Calling (Tools):**
+   - ☀️ `fetchDestinationWeather`: Simulates or retrieves weather conditions, temperature ranges, seasonal context, and packing advice.
+   - 📰 `fetchLocalNews`: Simulates or retrieves recent headlines, active municipal travel advisories, and festivals.
+5. **Solo Female Traveler Safety Hub:** Comprehensive safety rating, safest neighborhoods to book stays, areas to exercise caution in after dark, respectful dress codes, practical transit precautions, and emergency helplines (`1091`, `112`, `1363`).
+6. **Zero Cloud Lock-in / Free-Tier:** Runs locally with the interactive **Genkit Developer UI** (`localhost:4000`) and the **Web UI** (`localhost:3000`), supporting both live Gemini LLM reasoning and an offline simulated engine.
 
 ---
 
@@ -22,16 +30,23 @@
 
 ```
 genkit/
-├── index.ts               # Root entry point re-exporting core flow and tools
+├── prompts/
+│   ├── travelPlan.prompt    # Dotprompt template with YAML metadata & tool bindings
+│   └── safetyAudit.prompt   # Dedicated safety audit prompt template
+├── public/
+│   ├── index.html           # Modern semantic glassmorphic HTML structure
+│   ├── style.css            # Dark mode glassmorphism, responsive grid, print styles
+│   └── app.js               # Frontend UI controller, tab switching & API integration
 ├── src/
-│   ├── index.ts           # Genkit initialization, travelPlanFlow definition, and tool binding
-│   ├── schemas.ts         # Strict Zod schemas for flow inputs, tools, and outputs
-│   ├── tools.ts           # fetchDestinationWeather and fetchLocalNews Genkit tools
-│   └── test-cli.ts        # Standalone terminal runner to test flows without the browser
-├── .env.example           # Environment template for Gemini API key
-├── package.json           # Scripts and dependencies (genkit, @genkit-ai/googleai, zod, tsx)
-├── tsconfig.json          # Modern TypeScript ES2022/NodeNext configuration
-└── README.md              # Project documentation and usage guide
+│   ├── index.ts             # Genkit initialization, prompts, travelPlanFlow & tools
+│   ├── server.ts            # Lightweight Express server (serves API & static UI)
+│   ├── schemas.ts           # Strict Zod schemas for flow inputs, tools, and outputs
+│   ├── tools.ts             # fetchDestinationWeather and fetchLocalNews Genkit tools
+│   └── test-cli.ts          # Standalone terminal runner to test flows without the browser
+├── .env.example             # Environment template for Gemini API key
+├── package.json             # Scripts and dependencies (genkit, express, zod, tsx)
+├── tsconfig.json            # Modern TypeScript ES2022/NodeNext configuration
+└── README.md                # Project documentation and usage guide
 ```
 
 ---
@@ -40,8 +55,11 @@ genkit/
 
 - **Runtime:** Node.js (v18+)
 - **Language:** TypeScript
-- **Framework:** Firebase Genkit (`genkit` v1.43+) & Genkit CLI (`genkit-cli`)
-- **Model Plugin:** `@genkit-ai/googleai` (`gemini-2.0-flash`)
+- **Web Server:** Express
+- **Frontend:** Vanilla HTML5, CSS3 (Glassmorphism & animations), JavaScript
+- **AI Framework:** Firebase Genkit (`genkit` v1.43+) & Genkit CLI (`genkit-cli`)
+- **Prompts:** Genkit Dotprompt (`.prompt`) & `ai.definePrompt`
+- **Model Plugin:** `@genkit-ai/google-genai` (`googleai/gemini-3.7-flash`)
 - **Schema Validation:** Zod
 - **Runner:** `tsx` (TypeScript Execution Engine)
 
@@ -50,7 +68,7 @@ genkit/
 ## 🚀 Getting Started
 
 ### 1. Install Dependencies
-Dependencies are already installed in this directory. If reinstalling from scratch:
+Dependencies are already installed. If reinstalling from scratch:
 ```bash
 npm install
 ```
@@ -70,116 +88,132 @@ SoloTravelGenie works out of the box with an offline tool-orchestration engine. 
 
 ---
 
-## 🖥️ Interactive Testing with Genkit Developer UI
+## 🧠 Section 1: Run the Genkit Application
 
-To launch the local Genkit Developer UI:
+This runs the Genkit backend (flows, prompts, and tools) together with the official **Genkit Developer UI** for testing and trace inspection.
 
+### 1. Google Cloud Setup (login, project & APIs)
+
+Needed when using **Vertex AI** models (`vertexai/...`). If you only use `googleai/...` models with a `GEMINI_API_KEY`, you can skip this step.
+
+```bash
+# Log in to your Google account in the gcloud CLI
+gcloud auth login
+
+# Set the active Google Cloud project (use the Project ID, not the display name)
+gcloud projects list
+gcloud config set project YOUR_PROJECT_ID
+gcloud config get-value project   # verify
+
+# Create Application Default Credentials used by Genkit / Vertex AI
+gcloud auth application-default login
+
+# Enable the required APIs (billing must be enabled on the project)
+gcloud services enable aiplatform.googleapis.com
+gcloud services enable generativelanguage.googleapis.com
+
+# Confirm the APIs are enabled
+gcloud services list --enabled | grep -E "aiplatform|generativelanguage"
+```
+
+#### Where to find your `GCLOUD_PROJECT` ID
+
+`GCLOUD_PROJECT` is your **Google Cloud Project ID**. You can find it in either of these places:
+
+- **Google Cloud Console:** open [console.cloud.google.com](https://console.cloud.google.com), click the **project picker** at the top of the page, and copy the value in the **ID** column (e.g. `my-travel-app-123456`). The project **Dashboard** also shows it in the *Project info* card.
+- **gcloud CLI:**
+  ```bash
+  gcloud projects list            # PROJECT_ID column lists all your projects
+  gcloud config get-value project # shows the currently active project
+  ```
+
+To create a new project, use **New Project** in the project picker, or run:
+```bash
+gcloud projects create YOUR_PROJECT_ID
+```
+
+> **Note:** Use the **Project ID**, not the *Project name* (display name) or the *Project number*.
+
+Then add the project ID to your `.env` file in the project root:
+```env
+GCLOUD_PROJECT=YOUR_PROJECT_ID
+```
+
+> **Note:** Qwiklabs / Skills Boost lab projects (e.g. `qwiklabs-gcp-...`) are temporary and are deleted when the lab ends. Use your own project for ongoing development.
+
+### 2. Start Genkit with the Developer UI
 ```bash
 npm run genkit:dev
 ```
-*(Or via npx: `npx genkit start -- tsx --watch src/index.ts`)*
+*(`npm run genkit:start` is an alias for the same command)*
 
-### In the Developer UI:
-1. Open your browser and navigate to: **[http://localhost:4000](http://localhost:4000)**
-2. In the left navigation, select **Flows** -> **`travelPlanFlow`**.
-3. In the **Input JSON** panel, provide your travel parameters:
+1. Open **[http://localhost:4000](http://localhost:4000)** in your browser.
+2. Inspect the registered items:
+   - **Flows:** `travelPlanFlow`
+   - **Prompts:** `travelPlan`, `safetyAudit`, `hello` (from `prompts/`) and `travelPlanPrompt` (from code)
+   - **Tools:** `fetchDestinationWeather`, `fetchLocalNews`
+3. Run a flow or prompt with JSON input, for example:
    ```json
-   {
-     "destination": "Goa",
-     "travelDates": "Nov 15 - Nov 20, 2026"
-   }
+   { "destination": "Goa", "travelDates": "Nov 15 - Nov 20" }
    ```
-4. Click **Run**.
-5. You can view the full structured output and inspect the **Trace Viewer** to see the model invoking the tools (`fetchDestinationWeather` and `fetchLocalNews`).
+4. Open the **Traces** tab to see every model call and tool call step by step.
 
----
+> **Note:** `tsx --watch` restarts only when `.ts` files change. After editing a `.prompt` file, stop (`Ctrl+C`) and re-run `npm run genkit:dev`, then refresh the browser.
 
-## ⌨️ Command Line Testing
+### 3. Run a Flow from the Terminal (optional)
 
-### 1. Run Flow with Genkit CLI
-You can test the flow directly from your terminal using the Genkit CLI:
-```bash
-npx genkit flow:run travelPlanFlow '{"destination":"Jaipur","travelDates":"Dec 1 - Dec 5"}' -- tsx src/index.ts
-```
-
-### 2. Standalone Pretty CLI Runner
-Use the built-in CLI runner script:
+**Standalone CLI script:**
 ```bash
 # Default destination (Jaipur)
 npm run test:cli
 
-# Or specify custom destination and dates:
-npx tsx src/test-cli.ts "Goa" "Nov 10 - Nov 15"
+# Custom destination and travel window
+npx tsx src/test-cli.ts "Goa" "Nov 15 - Nov 20"
 npx tsx src/test-cli.ts "Pondicherry" "Next weekend"
-npx tsx src/test-cli.ts "Udaipur" "3 days in January"
+```
+
+**Genkit CLI:**
+```bash
+npx genkit flow:run travelPlanFlow '{"destination":"Goa","travelDates":"Nov 10 - Nov 15"}' -- tsx src/index.ts
 ```
 
 ---
 
-## 📋 Schema Reference
+## 🌐 Section 2: Run the UI Application (Web Dashboard)
 
-### Flow Input: `travelPlanFlow`
-```typescript
-{
-  destination: string;  // e.g., "Goa", "Jaipur", "Manali", "Udaipur"
-  travelDates: string;  // e.g., "Nov 15 - Nov 20", "4 days in December"
-}
+This starts the Express server ([src/server.ts](src/server.ts)), which serves the glassmorphic web dashboard from `public/` and exposes the API that calls `travelPlanFlow`.
+
+### 1. Start the Web Server
+```bash
+npm start
+```
+*(or `npm run serve`; use `npm run serve:watch` to auto-reload on code changes)*
+
+The server listens on port **3000** by default. To use a different port:
+```bash
+PORT=8080 npm start
 ```
 
-### Flow Output: `TravelPlanOutput`
-```typescript
-{
-  destination: string;
-  travelDates: string;
-  tripSummary: string;
-  modeOfTravelFromPune: Array<{
-    mode: string;                 // Flight, Train, Road/Bus
-    details: string;              // Specific route departing from Pune (e.g. PNQ flight, Pune Jn train)
-    estimatedDuration: string;    // e.g. "1 hr 15 mins direct flight"
-    approximateCost: string;      // e.g. "₹2,800 - ₹4,800"
-    recommendationNote: string;   // Local departure tip
-  }>;
-  localFood: Array<{
-    dishName: string;             // Authentic dish name
-    description: string;          // Dietary profile and preparation
-    recommendedEateries: string[];// Exact recommended cafes/eateries
-  }>;
-  weatherForecast: {
-    overview: string;
-    temperatureRange: string;
-    expectedConditions: string;
-    clothingAndPackingTips: string[];
-  };
-  latestNews: {
-    summary: string;
-    headlines: string[];
-    travelAdvisories: string;
-  };
-  recommendedStays: Array<{
-    name: string;
-    type: string;                 // Hostel, Boutique Hotel, Homestay
-    tier: string;                 // Budget-Friendly, Mid-Range
-    area: string;
-    approxCostPerNight: string;
-    safetyHighlights: string;     // Female-only dorms, 24/7 front desk, keycards
-  }>;
-  soloWomanTravelSafety: {
-    overallSafetyAssessment: string;
-    safeNeighborhoods: string[];
-    precautionsAndAreasToAvoid: string[];
-    culturalNuancesAndAttire: string;
-    practicalTips: string[];
-    emergencyHelplines: {
-      womenHelpline: string;      // 1091 / 112
-      police: string;             // 100 / 112
-      touristHelpline: string;    // 1363
-    };
-  };
-}
-```
+### 2. Use the Dashboard
+1. Open **[http://localhost:3000](http://localhost:3000)** in your browser.
+2. Select a quick-pick destination (e.g. **Goa**, **Jaipur**, **Udaipur**, **Pondicherry**) or type your own destination and dates.
+3. Click **"Craft My Solo Travel Plan"**.
+4. Explore the interactive tabs:
+   - 🛡️ **Solo Woman Safety** (Helplines, safe neighborhoods, caution zones, attire)
+   - 🚆 **Pune Transit** (Flights from PNQ, trains with numbers, buses, fares)
+   - 🌤️ **Weather & News** (Live conditions, packing checklist, headlines)
+   - 🍛 **Food & Stays** (Must-try regional dishes, vetted accommodations)
+
+### 3. API Endpoints
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/health` | Server status and mode (`live-gemini-flash` or `local-tool-engine`) |
+| `GET` | `/api/sample-destinations` | Quick-pick destinations shown in the UI |
+| `POST` | `/api/plan` | Generates a travel plan. Body: `{ "destination": "Goa", "travelDates": "Nov 15 - Nov 20" }` |
+
+> **Tip:** You can run both sections at the same time in two terminals: the Genkit Developer UI on port `4000` and the web dashboard on port `3000`.
 
 ---
-
 ## 📦 Build & TypeScript Validation
 
 To compile the TypeScript project into JavaScript in `dist/`:
