@@ -1,0 +1,21 @@
+#!/bin/sh
+# Block direct pushes to the protected branch(es).
+# Git passes lines on stdin: <local ref> <local sha> <remote ref> <remote sha>
+# Bypass only in emergencies with: git push --no-verify
+
+protected_branches="main"
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  for branch in $protected_branches; do
+    if [ "$remote_ref" = "refs/heads/$branch" ]; then
+      echo "❌ Direct push to '$branch' is disabled."
+      echo "   Push to a feature branch and open a Pull Request instead:"
+      echo "     git checkout -b my-feature"
+      echo "     git push -u origin my-feature"
+      exit 1
+    fi
+  done
+done
+
+exit 0
+
